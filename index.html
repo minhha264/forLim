@@ -92,12 +92,12 @@
         pointer-events: none;
       }
 
-      /* --- FLOWER PETALS --- */
+      /* --- FLOWER PETALS (Z-Index cao để phủ lên trên) --- */
       #petal-container {
         position: fixed;
         inset: 0;
         pointer-events: none;
-        z-index: 0;
+        z-index: 9999;
       }
       .petal {
         position: absolute;
@@ -168,8 +168,8 @@
       #card-stack {
         position: relative;
         width: 85vw;
-        max-width: 360px; /* Giữ kích thước cũ */
-        height: 62vh; /* Chiều cao cũ */
+        max-width: 360px;
+        height: 62vh;
         perspective: 1000px;
         margin-top: -20px;
       }
@@ -178,13 +178,13 @@
         width: 100%;
         height: 100%;
         background: #1a1a1a;
-        border: 4px solid #fff; /* Viền trắng kiểu ảnh polaroid/in */
-        border-bottom-width: 12px; /* Viền dưới dày hơn chút */
+        border: 4px solid #fff;
+        border-bottom-width: 12px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
         border-radius: 4px;
         display: flex;
         flex-direction: column;
-        transform-origin: 50% 100%; /* Pivot at bottom for natural fan effect */
+        transform-origin: 50% 100%;
         cursor: grab;
         overflow: hidden;
         transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -215,7 +215,7 @@
       /* Hint overlay only on top card */
       .card-hint {
         position: absolute;
-        bottom: 20px;
+        bottom: 25px; /* Cao hơn chút */
         left: 0;
         width: 100%;
         text-align: center;
@@ -227,18 +227,39 @@
       .swipe-card:last-child .card-hint {
         opacity: 1;
       }
+
+      /* NEW: Breathing & Glowing Animation */
+      @keyframes breathGlow {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 5px rgba(212, 175, 55, 0.2);
+          border-color: rgba(212, 175, 55, 0.3);
+          background: rgba(0, 0, 0, 0.6);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+          border-color: rgba(212, 175, 55, 0.8);
+          background: rgba(0, 0, 0, 0.8);
+          color: #fff;
+          text-shadow: 0 0 8px #d4af37;
+        }
+      }
+
       .hint-pill {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         background: rgba(0, 0, 0, 0.6);
-        padding: 6px 16px;
-        border-radius: 20px;
+        padding: 8px 20px;
+        border-radius: 30px;
         border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #fff;
-        font-size: 0.75rem;
+        color: #ddd;
+        font-size: 0.85rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
+        animation: breathGlow 2.5s ease-in-out infinite; /* Apply animation */
       }
 
       /* --- DETAIL MODAL --- */
@@ -269,19 +290,51 @@
       }
 
       /* --- LETTER SCROLL AREA --- */
+      .letter-container {
+        position: relative;
+        height: 60vh;
+        width: 100%;
+      }
+
       .letter-scroll {
-        max-height: 60vh;
+        height: 100%;
         overflow-y: auto;
         padding-right: 10px;
+        /* Smooth scrolling for mobile */
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
         /* Custom scrollbar */
         scrollbar-width: thin;
         scrollbar-color: var(--gold-primary) #333;
+        mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+        -webkit-mask-image: linear-gradient(
+          to bottom,
+          black 90%,
+          transparent 100%
+        );
       }
       .letter-scroll::-webkit-scrollbar {
         width: 4px;
       }
       .letter-scroll::-webkit-scrollbar-thumb {
         background: var(--gold-primary);
+      }
+
+      /* Scroll Indicator Arrow */
+      .scroll-indicator {
+        position: absolute;
+        bottom: 0px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--gold-primary);
+        font-size: 1.5rem;
+        animation: bounce 2s infinite;
+        opacity: 0;
+        transition: opacity 0.5s;
+        pointer-events: none; /* Let clicks pass through */
+      }
+      .scroll-indicator.visible {
+        opacity: 0.8;
       }
 
       /* --- UTILS --- */
@@ -397,14 +450,18 @@
       </div>
     </div>
 
-    <!-- DETAIL OVERLAY -->
+    <!-- DETAIL OVERLAY (Date instead of Star) -->
     <div id="detail-view">
       <div
         class="w-full max-w-md bg-[#111] border border-yellow-900/50 p-8 rounded-sm shadow-2xl transform transition-all"
       >
-        <div class="text-center text-gold text-2xl mb-4">
-          <i class="ph-fill ph-star-four"></i>
+        <div
+          id="detail-date"
+          class="text-center text-gold font-title text-xl tracking-[0.2em] mb-6 border-b border-yellow-900/30 pb-2 inline-block w-full"
+        >
+          <!-- JS fills date here -->
         </div>
+
         <div class="detail-content">
           <p
             id="detail-text"
@@ -422,7 +479,7 @@
       </div>
     </div>
 
-    <!-- 4. LETTER SCREEN (Updated Content) -->
+    <!-- 4. LETTER SCREEN (Updated Scrolling & Arrow) -->
     <div id="screen-letter" class="screen">
       <div class="max-w-md w-full px-6 flex flex-col h-full justify-center">
         <h2
@@ -431,69 +488,80 @@
           Gửi Lim,
         </h2>
 
-        <!-- Scrollable Letter Content -->
-        <div
-          class="letter-scroll text-lg md:text-xl text-gray-300 leading-relaxed font-light italic text-justify space-y-4"
-        >
-          <p>
-            Mấy ngày này, anh đã suy nghĩ rất nhiều về mối quan hệ của chúng
-            mình. Nhìn lại từng khoảnh khắc đã qua, và ôm lấy nó.
-          </p>
-          <p>
-            Suốt một khoảng thời gian, chúng mình cứ hợp rồi lại tan. Có lẽ
-            chúng mình đều có những khoảnh khắc lo lắng rằng những tổn thương
-            cũ, sai lầm cũ sẽ lại trở thành bài học lặp lại.
-          </p>
-          <p>
-            Nhưng anh cho rằng mỗi lần chúng mình đau, chúng mình lại có không
-            gian để trở về với chính mình, để thấy bản thân mình rõ hơn, và
-            người kia rõ hơn. Rồi cuối cùng vẫn chọn ôm lấy bóng dáng của nhau.
-            Mỗi lần như vậy lại là một lần tu sửa, nối rộng trái tim của mình vì
-            tình yêu.
-          </p>
-          <p>
-            Anh tin rằng sự chân thành của chúng mình lớn hơn sự mâu thuẫn, vì
-            những ký ức đẹp về em đã giúp anh thắng được những cơn bực tức nhất
-            thời, những sự khác biệt giữa chúng mình.
-          </p>
-          <p>
-            Dù rằng, chúng mình đã có nhiều lúc không vui, làm nhau buồn, làm
-            nhau tổn thương, nhưng ánh sáng từ em vẫn đủ để anh băng qua những
-            chuyện không vui, tiến về trái tim em một lần nữa.
-          </p>
-          <p>
-            Quá trình "lửa thử vàng" này làm cho anh càng cảm thấy mối quan hệ
-            này càng đáng tin hơn là những mối quan hệ thuận buồm xuôi gió ngay
-            từ đầu.
-          </p>
-          <p>
-            Anh sẽ mãi nhớ rằng, hôm đó em nói với anh rằng đáng ra anh phải
-            thấy vui, thấy may mắn vì em đã thấy biển cả nhưng vẫn chọn ở lại
-            với dòng sông. Anh cứ nghĩ mãi nghĩ mãi, mới nhận ra rằng em đã bao
-            dung với anh biết nhường nào. Thế là lúc nhận ra, anh đã khóc đấy.
-          </p>
-          <p>
-            Đứa trẻ bên trong mà anh đã bỏ rơi từ lâu nay vì vài câu nói của em
-            mà cảm thấy như được vỗ về. Vì lần đầu tiên nó gặp được một người
-            như em. Được có em ở bên là điều mà anh tự hào nhất trong cả cuộc
-            đời này cho đến hiện tại, và anh mong muốn nó vẫn đúng với cả sau
-            này nữa.
-          </p>
-          <p>
-            Cảm ơn em rất nhiều vì tất cả, cảm ơn cả những lần rời xa để cả anh
-            và em được nhìn nhận lại tình cảm một cách rõ hơn, chân thật hơn. Và
-            cuối cùng, cảm ơn em vì đã ở lại đây với anh.
-          </p>
-          <p>
-            Sự thấu hiểu sinh ra từ đau đớn này là những thứ mà một mối quan hệ
-            không gặp gió bão sẽ không bao giờ có được. Giống như một cái cây,
-            sau mỗi lần mưa gió, rễ sẽ sâu hơn, thân sẽ cứng hơn.
-          </p>
-          <p>
-            Anh cũng đã từng giằng co trong tâm trí mình, nhưng cuối cùng vẫn
-            xác định em chính là người mà anh không muốn bỏ lỡ, không phải ai
-            khác, mà chỉ là em thôi.
-          </p>
+        <!-- Wrapper for scroll logic -->
+        <div class="letter-container">
+          <div
+            id="letter-scroll-area"
+            class="letter-scroll text-lg md:text-xl text-gray-300 leading-relaxed font-light italic text-justify space-y-4"
+          >
+            <p>
+              Mấy ngày này, anh đã suy nghĩ rất nhiều về mối quan hệ của chúng
+              mình. Nhìn lại từng khoảnh khắc đã qua, và ôm lấy nó.
+            </p>
+            <p>
+              Suốt một khoảng thời gian, chúng mình cứ hợp rồi lại tan. Có lẽ
+              chúng mình đều có những khoảnh khắc lo lắng rằng những tổn thương
+              cũ, sai lầm cũ sẽ lại trở thành bài học lặp lại.
+            </p>
+            <p>
+              Nhưng anh cho rằng mỗi lần chúng mình đau, chúng mình lại có không
+              gian để trở về với chính mình, để thấy bản thân mình rõ hơn, và
+              người kia rõ hơn. Rồi cuối cùng vẫn chọn ôm lấy bóng dáng của
+              nhau. Mỗi lần như vậy lại là một lần tu sửa, nối rộng trái tim của
+              mình vì tình yêu.
+            </p>
+            <p>
+              Anh tin rằng sự chân thành của chúng mình lớn hơn sự mâu thuẫn, vì
+              những ký ức đẹp về em đã giúp anh thắng được những cơn bực tức
+              nhất thời, những sự khác biệt giữa chúng mình.
+            </p>
+            <p>
+              Dù rằng, chúng mình đã có nhiều lúc không vui, làm nhau buồn, làm
+              nhau tổn thương, nhưng ánh sáng từ em vẫn đủ để anh băng qua những
+              chuyện không vui, tiến về trái tim em một lần nữa.
+            </p>
+            <p>
+              Quá trình "lửa thử vàng" này làm cho anh càng cảm thấy mối quan hệ
+              này càng đáng tin hơn là những mối quan hệ thuận buồm xuôi gió
+              ngay từ đầu.
+            </p>
+            <p>
+              Anh sẽ mãi nhớ rằng, hôm đó em nói với anh rằng đáng ra anh phải
+              thấy vui, thấy may mắn vì em đã thấy biển cả nhưng vẫn chọn ở lại
+              với dòng sông. Anh cứ nghĩ mãi nghĩ mãi, mới nhận ra rằng em đã
+              bao dung với anh biết nhường nào. Thế là lúc nhận ra, anh đã khóc
+              đấy.
+            </p>
+            <p>
+              Đứa trẻ bên trong mà anh đã bỏ rơi từ lâu nay vì vài câu nói của
+              em mà cảm thấy như được vỗ về. Vì lần đầu tiên nó gặp được một
+              người như em. Được có em ở bên là điều mà anh tự hào nhất trong cả
+              cuộc đời này cho đến hiện tại, và anh mong muốn nó vẫn đúng với cả
+              sau này nữa.
+            </p>
+            <p>
+              Cảm ơn em rất nhiều vì tất cả, cảm ơn cả những lần rời xa để cả
+              anh và em được nhìn nhận lại tình cảm một cách rõ hơn, chân thật
+              hơn. Và cuối cùng, cảm ơn em vì đã ở lại đây với anh.
+            </p>
+            <p>
+              Sự thấu hiểu sinh ra từ đau đớn này là những thứ mà một mối quan
+              hệ không gặp gió bão sẽ không bao giờ có được. Giống như một cái
+              cây, sau mỗi lần mưa gió, rễ sẽ sâu hơn, thân sẽ cứng hơn.
+            </p>
+            <p>
+              Anh cũng đã từng giằng co trong tâm trí mình, nhưng cuối cùng vẫn
+              xác định em chính là người mà anh không muốn bỏ lỡ, không phải ai
+              khác, mà chỉ là em thôi.
+            </p>
+            <!-- Padding bottom to ensure text isn't hidden behind button -->
+            <div class="h-8"></div>
+          </div>
+          <!-- Scroll Indicator -->
+          <i
+            id="scroll-arrow"
+            class="ph-fill ph-caret-down scroll-indicator"
+          ></i>
         </div>
 
         <div class="text-center flex-shrink-0 pt-4">
@@ -627,6 +695,7 @@
           to.classList.add("active");
           if (to === screens.typewriter) startIntroTypewriter();
           if (to === screens.gallery) initCards();
+          if (to === screens.letter) initLetterScroll(); // Trigger scroll logic
           if (to === screens.reveal) startFinalSequence();
         }, 1000);
       }
@@ -683,69 +752,49 @@
         );
       }
 
-      // 3. GALLERY (SHUTTERSTOCK STACK STYLE)
+      // 3. GALLERY
       const stack = document.getElementById("card-stack");
       const detailView = document.getElementById("detail-view");
       const detailText = document.getElementById("detail-text");
+      const detailDate = document.getElementById("detail-date");
 
-      // Generate random rotations for the stack effect
       const randomRotations = memories.map(() => (Math.random() - 0.5) * 8);
 
       function initCards() {
         stack.innerHTML = "";
-        // We want the first memory (index 0) to be at the bottom of the stack visually?
-        // Actually, gallery usually goes 1 -> 2 -> 3. So Memory 1 is top card.
-        // We need to render in reverse order so 1 is on top in DOM (z-index handled manually).
-
         const cardData = [...memories];
-
-        // Render from last to first so first is on top of DOM stack
-        // Actually, for `absolute` positioning, last in DOM is on top.
-        // So we render reverse of reverse -> Render normal order, but manipulate z-index.
-
-        // Let's render correct order, but use z-index to stack 0 on top.
-        // And we only attach listeners to the top card.
-
         cardData.reverse().forEach((mem, i) => {
-          // i=0 is the last memory (bottom), i=length-1 is first memory (top)
           createCardElement(mem, i, cardData.length);
         });
       }
 
       function createCardElement(mem, index, total) {
-        // index runs 0 to total-1.
-        // We want realIndex (from start of array) to calc rotation
         const realIndex = total - 1 - index;
-
         const card = document.createElement("div");
         card.className = "swipe-card";
 
-        // STACK VISUALS (The "Shutterstock" pile look)
-        // Top card (last in DOM) gets scale 1, others slightly smaller and rotated
         const isTop = index === total - 1;
-
-        // Store initial transform for reset
         const rotation = isTop ? 0 : randomRotations[realIndex];
-        const scale = isTop ? 1 : 0.95 - (total - index) * 0.01; // subtle scaling
-        const translateY = isTop ? 0 : (total - index) * 2; // subtle shift down
+        const scale = isTop ? 1 : 0.95 - (total - index) * 0.01;
+        const translateY = isTop ? 0 : (total - index) * 2;
 
         card.style.zIndex = index;
         card.dataset.baseTransform = `translateY(${translateY}px) scale(${scale}) rotate(${rotation}deg)`;
         card.style.transform = card.dataset.baseTransform;
 
-        // Opacity for depth
         if (total - index > 3) {
-          card.style.opacity = 0; // Hide cards too deep in stack
+          card.style.opacity = 0;
         } else {
           card.style.opacity = 1;
         }
 
+        // Updated content with Glowing Breathing Text
         card.innerHTML = `
             <img src="${mem.img}" class="card-img" draggable="false">
             <div class="date-badge">${mem.text}</div>
             <div class="card-hint">
                 <div class="hint-pill">
-                    <i class="ph-fill ph-hand-tap"></i> Chạm xem &bull; Vuốt bỏ
+                    <i class="ph-fill ph-fingerprint"></i> Chạm để mở khóa ký ức
                 </div>
             </div>
         `;
@@ -775,7 +824,7 @@
             : e.clientY;
           startX = clientX;
           startY = clientY;
-          card.style.transition = "none"; // Remove transition for drag
+          card.style.transition = "none";
         };
 
         const onMove = (e) => {
@@ -790,7 +839,6 @@
           currentX = clientX - startX;
           const currentY = clientY - startY;
 
-          // Move and Rotate based on drag
           const rotate = currentX * 0.05;
           card.style.transform = `translateX(${currentX}px) translateY(${currentY}px) rotate(${rotate}deg)`;
         };
@@ -799,28 +847,25 @@
           if (!isDragging) return;
           isDragging = false;
           card.style.transition =
-            "transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)"; // Restore smooth transition
+            "transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)";
 
           const timeDiff = new Date().getTime() - startTime;
           const moveDist = Math.abs(currentX);
 
-          // TAP DETECTION (Short time, short distance)
           if (timeDiff < 300 && moveDist < 10) {
-            card.style.transform = card.dataset.baseTransform; // Reset
+            card.style.transform = card.dataset.baseTransform;
             openDetail(memData);
             return;
           }
 
-          // SWIPE DETECTION
           if (moveDist > 100) {
-            // Swipe out
             const dir = currentX > 0 ? 1 : -1;
             card.style.transform = `translateX(${dir * 1000}px) rotate(${
               dir * 45
             }deg)`;
             setTimeout(() => {
               card.remove();
-              updateStackInteractivity(); // Promote next card
+              updateStackInteractivity();
               if (stack.children.length === 0) {
                 setTimeout(
                   () => switchScreen(screens.gallery, screens.letter),
@@ -829,18 +874,15 @@
               }
             }, 300);
           } else {
-            // Reset to original pile position
             card.style.transform = card.dataset.baseTransform;
           }
         };
 
-        // Events
         card.addEventListener("mousedown", onStart);
         window.addEventListener("mousemove", onMove);
         window.addEventListener("mouseup", onEnd);
-
         card.addEventListener("touchstart", onStart, { passive: true });
-        window.addEventListener("touchmove", onMove, { passive: true }); // Optimized touch
+        window.addEventListener("touchmove", onMove, { passive: true });
         window.addEventListener("touchend", onEnd);
       }
 
@@ -848,24 +890,19 @@
         const cards = Array.from(stack.children);
         if (cards.length === 0) return;
 
-        // The new top card is the last one in DOM
         const topCard = cards[cards.length - 1];
-        const memData = memories[memories.length - cards.length]; // Find matching data
+        const memData = memories[memories.length - cards.length];
 
-        // Animate it to "Active" state (scale 1, rotate 0)
         topCard.style.transition = "all 0.5s ease";
         topCard.style.transform = `scale(1) rotate(0deg)`;
-        topCard.dataset.baseTransform = `scale(1) rotate(0deg)`; // Update base for reset
+        topCard.dataset.baseTransform = `scale(1) rotate(0deg)`;
         topCard.style.opacity = 1;
 
-        // Show Hint
         const hint = topCard.querySelector(".card-hint");
         if (hint) hint.style.opacity = 1;
 
-        // Attach listeners
         setupInteraction(topCard, memData);
 
-        // Bring the card below it up slightly
         if (cards.length > 1) {
           const nextCard = cards[cards.length - 2];
           nextCard.style.opacity = 1;
@@ -874,6 +911,7 @@
 
       function openDetail(mem) {
         detailText.innerText = mem.detail;
+        detailDate.innerText = mem.text;
         detailView.classList.add("active");
       }
       document
@@ -882,7 +920,32 @@
           detailView.classList.remove("active");
         });
 
-      // 4. PETALS
+      // 4. LETTER SCROLL LOGIC
+      function initLetterScroll() {
+        const scrollArea = document.getElementById("letter-scroll-area");
+        const indicator = document.getElementById("scroll-arrow");
+
+        const checkScroll = () => {
+          // Check if we are near bottom (within 10px)
+          const isAtBottom =
+            scrollArea.scrollTop + scrollArea.clientHeight >=
+            scrollArea.scrollHeight - 10;
+
+          if (isAtBottom) {
+            indicator.classList.remove("visible");
+          } else {
+            indicator.classList.add("visible");
+          }
+        };
+
+        // Attach event
+        scrollArea.addEventListener("scroll", checkScroll);
+
+        // Initial check after a slight delay to allow rendering
+        setTimeout(checkScroll, 500);
+      }
+
+      // 5. PETALS
       function createPetals() {
         const container = document.getElementById("petal-container");
         for (let i = 0; i < 30; i++) {
@@ -901,7 +964,7 @@
       }
       createPetals();
 
-      // 5. FINAL REVEAL
+      // 6. FINAL REVEAL
       document.getElementById("openGiftBtn").addEventListener("click", () => {
         switchScreen(screens.letter, screens.reveal);
       });
@@ -941,15 +1004,17 @@
         );
 
         const h1 = document.createElement("h1");
-        h1.className = "font-title text-4xl text-gold mt-8";
+        h1.className =
+          "font-title text-3xl md:text-4xl text-gold mt-8 leading-normal"; // Adjusted size
         container.appendChild(h1);
         h1.appendChild(cursor);
 
-        const msg = "RA MỞ CỬA ĐI";
+        const msg =
+          "Vậy nên em hãy thử ra mở cửa xem điều gì đang chờ em ngoài kia"; // Updated text
         for (let char of msg) {
           h1.innerHTML = h1.innerText + char;
           h1.appendChild(cursor);
-          await sleep(150);
+          await sleep(100); // Slightly faster typing for long sentence
         }
       }
     </script>
