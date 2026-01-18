@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>Gửi Lim - Just For You</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Playfair+Display+SC:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+      :root {
+        --bg-color: #050505;
+        --gold-primary: #d4af37;
+        --gold-light: #f4e4bc;
+        --red-deep: #8a1c1c;
+      }
+
+      body {
+        background-color: var(--bg-color);
+        background-image: radial-gradient(
+          circle at 50% 30%,
+          #1a1a1a 0%,
+          #000000 100%
+        );
+        color: #e0e0e0;
+        font-family: "Cormorant Garamond", serif;
+        overflow: hidden;
+        height: 100dvh; /* Dynamic viewport height */
+        width: 100vw;
+        touch-action: none; /* Prevent scroll bounce on mobile */
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      /* --- TYPOGRAPHY --- */
+      .font-title {
+        font-family: "Playfair Display SC", serif;
+      }
+      .text-gold {
+        color: var(--gold-primary);
+        text-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
+      }
+
+      /* --- COMMON ANIMATIONS --- */
+      .screen {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+        padding-bottom: env(
+          safe-area-inset-bottom,
+          20px
+        ); /* iPhone safe area */
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+          transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+        z-index: 10;
+        background: linear-gradient(
+          to bottom,
+          rgba(5, 5, 5, 0.95),
+          rgba(0, 0, 0, 1)
+        );
+      }
+      .screen.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: scale(1);
+      }
+      .screen.exit {
+        opacity: 0;
+        transform: scale(1.05);
+        filter: blur(4px);
+        pointer-events: none;
+      }
+
+      /* --- FLOWER PETALS --- */
+      #petal-container {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .petal {
+        position: absolute;
+        border-radius: 50% 0 50% 50%;
+        animation: fall linear infinite;
+        filter: blur(0.5px);
+      }
+      @keyframes fall {
+        0% {
+          transform: translateY(-10vh) rotate(0deg) translateX(0);
+          opacity: 0;
+        }
+        10% {
+          opacity: 0.8;
+        }
+        100% {
+          transform: translateY(110vh) rotate(360deg) translateX(30px);
+          opacity: 0;
+        }
+      }
+
+      /* --- SCREEN 1: INTRO --- */
+      .fingerprint-scanner {
+        width: 90px;
+        height: 90px;
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background: rgba(255, 255, 255, 0.02);
+        transition: all 0.3s;
+        cursor: pointer;
+        /* Touch target optimization */
+        margin-top: 2rem;
+      }
+      .fingerprint-icon {
+        font-size: 4rem;
+        color: #666;
+        transition: color 0.5s;
+      }
+      .scanning .fingerprint-icon {
+        color: var(--gold-primary);
+        filter: drop-shadow(0 0 10px var(--gold-primary));
+      }
+      .scan-ring {
+        position: absolute;
+        inset: -5px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        border-top-color: var(--gold-primary);
+        border-right-color: transparent;
+        border-bottom-color: var(--gold-primary);
+        animation: spin 1.5s linear infinite;
+        opacity: 0;
+      }
+      .scanning .scan-ring {
+        opacity: 1;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* --- SCREEN 3: GALLERY (UPDATED STYLE) --- */
+      #card-stack {
+        position: relative;
+        width: 85vw;
+        max-width: 360px; /* Giữ kích thước cũ */
+        height: 62vh; /* Chiều cao cũ */
+        perspective: 1000px;
+        margin-top: -20px;
+      }
+      .swipe-card {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #1a1a1a;
+        border: 4px solid #fff; /* Viền trắng kiểu ảnh polaroid/in */
+        border-bottom-width: 12px; /* Viền dưới dày hơn chút */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        border-radius: 4px;
+        display: flex;
+        flex-direction: column;
+        transform-origin: 50% 100%; /* Pivot at bottom for natural fan effect */
+        cursor: grab;
+        overflow: hidden;
+        transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        will-change: transform;
+      }
+      .card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+        filter: brightness(0.95);
+      }
+      /* Date overlay badge */
+      .date-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: var(--gold-primary);
+        padding: 4px 10px;
+        font-family: "Playfair Display SC";
+        font-size: 0.8rem;
+        border: 1px solid var(--gold-primary);
+        backdrop-filter: blur(4px);
+        z-index: 2;
+      }
+
+      /* Hint overlay only on top card */
+      .card-hint {
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+        z-index: 5;
+      }
+      .swipe-card:last-child .card-hint {
+        opacity: 1;
+      }
+      .hint-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 6px 16px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* --- DETAIL MODAL --- */
+      #detail-view {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        padding: 20px;
+      }
+      #detail-view.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .detail-content {
+        max-height: 70vh;
+        overflow-y: auto;
+        text-align: center;
+        padding: 0 10px;
+      }
+
+      /* --- LETTER SCROLL AREA --- */
+      .letter-scroll {
+        max-height: 60vh;
+        overflow-y: auto;
+        padding-right: 10px;
+        /* Custom scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: var(--gold-primary) #333;
+      }
+      .letter-scroll::-webkit-scrollbar {
+        width: 4px;
+      }
+      .letter-scroll::-webkit-scrollbar-thumb {
+        background: var(--gold-primary);
+      }
+
+      /* --- UTILS --- */
+      .cursor-blink {
+        border-right: 2px solid var(--gold-primary);
+        animation: blink 1s step-end infinite;
+      }
+      @keyframes blink {
+        50% {
+          border-color: transparent;
+        }
+      }
+
+      .gift-btn {
+        margin-top: 1.5rem;
+        background: transparent;
+        color: var(--gold-primary);
+        border: 1px solid var(--gold-primary);
+        padding: 12px 30px;
+        font-family: "Playfair Display SC", serif;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+      .gift-btn:hover {
+        background: var(--gold-primary);
+        color: #000;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- BACKGROUND MUSIC -->
+    <audio id="bgMusic" loop>
+      <source src="anhnhora.mp3" type="audio/mp3" />
+    </audio>
+
+    <div id="petal-container"></div>
+
+    <!-- 1. INTRO SCREEN -->
+    <div id="screen-intro" class="screen active">
+      <div class="relative w-32 h-32 mb-8 flex justify-center items-center">
+        <!-- Avatar Lim -->
+        <div
+          class="absolute inset-0 border border-yellow-600 rounded-full animate-[spin_12s_linear_infinite]"
+        ></div>
+        <img
+          src="avatar.png"
+          class="w-28 h-28 rounded-full object-cover border-2 border-yellow-800 shadow-[0_0_30px_rgba(0,0,0,1)] relative z-10"
+          alt="Avatar"
+        />
+      </div>
+
+      <h1
+        class="font-title text-4xl text-gold mb-2 tracking-widest text-center"
+      >
+        GỬI LIM
+      </h1>
+      <p class="text-gray-500 italic text-sm mb-12 tracking-widest font-serif">
+        Garden of Memories
+      </p>
+
+      <div class="fingerprint-scanner" id="fingerprintBtn">
+        <i class="ph ph-fingerprint fingerprint-icon"></i>
+        <div class="scan-ring"></div>
+      </div>
+      <p
+        class="mt-6 text-[10px] text-gray-500 font-title tracking-[0.3em] uppercase opacity-70 animate-pulse"
+      >
+        Giữ để mở khóa
+      </p>
+    </div>
+
+    <!-- 2. TYPEWRITER SCREEN -->
+    <div id="screen-typewriter" class="screen">
+      <div class="w-full max-w-md px-6">
+        <div
+          id="typewriter-content"
+          class="text-xl md:text-2xl leading-relaxed text-justify text-gray-300 font-light border-l border-yellow-800/40 pl-5 italic min-h-[200px]"
+        ></div>
+      </div>
+      <button
+        id="nextBtnTypewriter"
+        class="mt-12 opacity-0 transition-opacity duration-1000 text-gold font-title text-sm border-b border-gold pb-1 tracking-widest"
+      >
+        TIẾP TỤC
+      </button>
+    </div>
+
+    <!-- 3. GALLERY SCREEN -->
+    <div id="screen-gallery" class="screen">
+      <div class="absolute top-12 w-full text-center z-20">
+        <div
+          class="font-title text-lg text-gray-400 tracking-[0.3em] border-b border-gray-800 inline-block pb-2"
+        >
+          KHOẢNG KHẮC
+        </div>
+      </div>
+
+      <div id="card-stack">
+        <!-- Cards injected via JS -->
+      </div>
+
+      <!-- Navigation Icons -->
+      <div
+        class="absolute bottom-12 flex gap-12 text-gray-600 text-3xl z-20 pointer-events-none"
+      >
+        <i class="ph ph-arrow-left opacity-30"></i>
+        <i class="ph ph-hand-swipe text-gold animate-bounce opacity-80"></i>
+        <i class="ph ph-arrow-right opacity-30"></i>
+      </div>
+    </div>
+
+    <!-- DETAIL OVERLAY -->
+    <div id="detail-view">
+      <div
+        class="w-full max-w-md bg-[#111] border border-yellow-900/50 p-8 rounded-sm shadow-2xl transform transition-all"
+      >
+        <div class="text-center text-gold text-2xl mb-4">
+          <i class="ph-fill ph-star-four"></i>
+        </div>
+        <div class="detail-content">
+          <p
+            id="detail-text"
+            class="text-lg md:text-xl text-gray-200 leading-relaxed italic font-light"
+          ></p>
+        </div>
+        <div class="mt-8 text-center">
+          <button
+            id="close-detail-btn"
+            class="text-xs font-title text-gray-500 uppercase tracking-widest hover:text-white transition-colors"
+          >
+            Đóng lại
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. LETTER SCREEN (Updated Content) -->
+    <div id="screen-letter" class="screen">
+      <div class="max-w-md w-full px-6 flex flex-col h-full justify-center">
+        <h2
+          class="font-title text-3xl mb-6 text-gold tracking-wider text-center flex-shrink-0"
+        >
+          Gửi Lim,
+        </h2>
+
+        <!-- Scrollable Letter Content -->
+        <div
+          class="letter-scroll text-lg md:text-xl text-gray-300 leading-relaxed font-light italic text-justify space-y-4"
+        >
+          <p>
+            Mấy ngày này, anh đã suy nghĩ rất nhiều về mối quan hệ của chúng
+            mình. Nhìn lại từng khoảnh khắc đã qua, và ôm lấy nó.
+          </p>
+          <p>
+            Suốt một khoảng thời gian, chúng mình cứ hợp rồi lại tan. Có lẽ
+            chúng mình đều có những khoảnh khắc lo lắng rằng những tổn thương
+            cũ, sai lầm cũ sẽ lại trở thành bài học lặp lại.
+          </p>
+          <p>
+            Nhưng anh cho rằng mỗi lần chúng mình đau, chúng mình lại có không
+            gian để trở về với chính mình, để thấy bản thân mình rõ hơn, và
+            người kia rõ hơn. Rồi cuối cùng vẫn chọn ôm lấy bóng dáng của nhau.
+            Mỗi lần như vậy lại là một lần tu sửa, nối rộng trái tim của mình vì
+            tình yêu.
+          </p>
+          <p>
+            Anh tin rằng sự chân thành của chúng mình lớn hơn sự mâu thuẫn, vì
+            những ký ức đẹp về em đã giúp anh thắng được những cơn bực tức nhất
+            thời, những sự khác biệt giữa chúng mình.
+          </p>
+          <p>
+            Dù rằng, chúng mình đã có nhiều lúc không vui, làm nhau buồn, làm
+            nhau tổn thương, nhưng ánh sáng từ em vẫn đủ để anh băng qua những
+            chuyện không vui, tiến về trái tim em một lần nữa.
+          </p>
+          <p>
+            Quá trình "lửa thử vàng" này làm cho anh càng cảm thấy mối quan hệ
+            này càng đáng tin hơn là những mối quan hệ thuận buồm xuôi gió ngay
+            từ đầu.
+          </p>
+          <p>
+            Anh sẽ mãi nhớ rằng, hôm đó em nói với anh rằng đáng ra anh phải
+            thấy vui, thấy may mắn vì em đã thấy biển cả nhưng vẫn chọn ở lại
+            với dòng sông. Anh cứ nghĩ mãi nghĩ mãi, mới nhận ra rằng em đã bao
+            dung với anh biết nhường nào. Thế là lúc nhận ra, anh đã khóc đấy.
+          </p>
+          <p>
+            Đứa trẻ bên trong mà anh đã bỏ rơi từ lâu nay vì vài câu nói của em
+            mà cảm thấy như được vỗ về. Vì lần đầu tiên nó gặp được một người
+            như em. Được có em ở bên là điều mà anh tự hào nhất trong cả cuộc
+            đời này cho đến hiện tại, và anh mong muốn nó vẫn đúng với cả sau
+            này nữa.
+          </p>
+          <p>
+            Cảm ơn em rất nhiều vì tất cả, cảm ơn cả những lần rời xa để cả anh
+            và em được nhìn nhận lại tình cảm một cách rõ hơn, chân thật hơn. Và
+            cuối cùng, cảm ơn em vì đã ở lại đây với anh.
+          </p>
+          <p>
+            Sự thấu hiểu sinh ra từ đau đớn này là những thứ mà một mối quan hệ
+            không gặp gió bão sẽ không bao giờ có được. Giống như một cái cây,
+            sau mỗi lần mưa gió, rễ sẽ sâu hơn, thân sẽ cứng hơn.
+          </p>
+          <p>
+            Anh cũng đã từng giằng co trong tâm trí mình, nhưng cuối cùng vẫn
+            xác định em chính là người mà anh không muốn bỏ lỡ, không phải ai
+            khác, mà chỉ là em thôi.
+          </p>
+        </div>
+
+        <div class="text-center flex-shrink-0 pt-4">
+          <button class="gift-btn" id="openGiftBtn">Thông điệp cuối</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. FINAL REVEAL -->
+    <div id="screen-reveal" class="screen" style="background: black">
+      <div
+        id="final-text-container"
+        class="relative z-20 px-4 w-full max-w-md text-center"
+      ></div>
+    </div>
+
+    <script>
+      // --- DATA ---
+      const memories = [
+        {
+          img: "1.png", // Demo image
+          text: "29/07/2024",
+          detail:
+            "Tin nhắn đầu tiên: Đây là ngày đầu tiên anh gặp em và cũng là lần đầu tiên anh nhắn tin cho em. Điều này làm anh nhớ rằng ai cũng bắt đầu từ đâu đó.",
+        },
+        {
+          img: "2.png", // Demo image
+          text: "17/09/2024",
+          detail:
+            "Friends on Facebook: Ngày này em chịu add a trên fb nè. Suốt 1 khoảng thời gian, mình đã có rất nhiều cuộc trò chuyện lúc khuya muộn. Rồi nào là em rủ anh đi tập tennis cùng nè, hỏi anh cung hoàng đạo gì nè, rồi là anh có hack fb em... Mình đã dần hiểu và quen nhau hơn từ những điều nhỏ nhặt như vậy.",
+        },
+        {
+          img: "3.jpg", // Replace with real images
+          text: "05/12/2024",
+          detail:
+            "Tỏ tình: Do là anh nhát quá, nên anh khum dám tỏ tình trực tiếp, mà viết ra giấy xong gùi đọc lại. Em nói là anh chưa đủ chân thành, anh vẫn nhớ, nên anh lại tiếp tục cố gắng.",
+        },
+        {
+          img: "4.jpg",
+          text: "18/12/2024",
+          detail:
+            "Những bông hoa đầu tiên: Anh nhớ lúc đó anh muốn ngỏ lời đi ăn cùng em dịp Giáng Sinh. Anh tặng hoa của Ren, tối đó cũng lần đầu tiên mình ngồi riêng với nhau tại một quán ăn chè gần nhà em, dù em chưa trả lời anh về việc có chấp nhận buổi hẹn đó khum. Nhưng trong lòng vẫn thấy rất vui vì được ngồi trò chuyện cùng eim.",
+        },
+        {
+          img: "5.jpg",
+          text: "12/01/2025",
+          detail:
+            "Lần đầu mất liên lạc: Anh nhớ lúc đó mình về Hạ Long, cảm thấy mối quan hệ của mình đã gần gũi hơn một chút. Anh up 1 story ngụ ý rằng ngày hôm nay anh nhớ Lim rất nhiều, nhưng Lim hiểu lầm anh và cắt liên lạc. Do trong lòng quá nhiều rối bời, anh không dám ép em liên lạc lại, chỉ biết chờ đợi.",
+        },
+        {
+          img: "6.jpg",
+          text: "23/01/2025",
+          detail:
+            "Năn nỉ mãi thì e cũng chịu unblock a. Anh đã rất vui khi nhìn thấy tin nhắn của em, nhưng cũng vừa lo lắng vừa hoang mang vì mình đã bỏ lỡ mất tin nhắn tận 1-2 ngày. Anh sợ là anh đã đánh mất em rùi. Khi lại được trò chuyện cùng em, anh cảm thấy mình vẫn còn cơ hội sửa sai.",
+        },
+        {
+          img: "7.jpg",
+          text: "16/02/2025",
+          detail:
+            "2NE1 Concert Day 2: Mặc dù gất buồn vì em lại từ chối anh một lần nữa, nhưng anh rất nhớ buổi hẹn ngày hôm đó. Anh đón em lúc khoảng 4h30 chiều, trông em thật dễ thương, make up thật xinh. Dù chỉ là trong chốc lát, nhưng anh vẫn trân trọng khoảnh khắc đó.",
+        },
+        {
+          img: "8.jpg",
+          text: "09/06/2025",
+          detail:
+            "Sầu riêng: Cũng phải bẵng đi một thời gian ấy nhỉ, mình cứ nhập nhằng. Anh cứ tưởng mình đã chấp nhận thực tế, nhưng trong lòng vẫn luôn là hình bóng em. Hôm đó anh mang nước cho em, em cho anh một hộp sầu riêng đem về. Mặc dù không phải món khoái khẩu, nhưng anh đã thấy rất ngon đó.",
+        },
+        {
+          img: "9.jpg",
+          text: "19/06/2025",
+          detail:
+            "Bữa ăn đầu tiên mà em nấu cho anh. Anh vẫn nhớ sáng đó ngủ dậy, em hỏi anh mấy giờ ăn cơm, rồi có bị dị ứng gì khum. Lúc nhận được, anh đã rất bất ngờ đó. Đây là lần đầu tiên anh cảm nhận được sự quan tâm từ em.",
+        },
+        {
+          img: "10.jpg",
+          text: "17/07/2025",
+          detail:
+            "Lần nữa mất liên lạc: Quan tâm nhau chưa được bao lâu thì anh lại phải xa em. Lần này, là anh chủ động dừng liên lạc, vì anh nghĩ rằng em thấy anh phiền phức. Thời gian đó, em cũng biết mà.",
+        },
+        {
+          img: "11.jpg",
+          text: "14/08/2025",
+          detail:
+            "Em đã chủ động liên lạc lại. Anh đã rất vui nhưng vì mang trong mình một tâm trạng nặng nề, anh sợ niềm hi vọng của chính bản thân sẽ lại làm tổn thương mình. Nhưng anh vẫn rất trân trọng những tin nhắn em gửi cho anh trong khoảng thời gian này.",
+        },
+        {
+          img: "12.jpg",
+          text: "22/11/2025",
+          detail:
+            "Lúc này, tâm trí anh đang rất rối bời và cực kỳ thiếu ổn định, em lại xuất hiện, dùng lòng bao dung của em để cảm hóa anh. Nghe những lời động viên của em, anh lại muốn tiếp tục cố gắng.",
+        },
+        {
+          img: "13.jpg",
+          text: "20/12/2025",
+          detail:
+            "Quà giáng sinh đầu tiên từ em: Em thật biết cách làm anh bất ngờ, miệng thì toàn lời lạnh lùng, nhưng vẫn quan tâm anh. Ngày hôm đó của anh bỗng trở nên vui hơn rất nhiều nhờ có em đó.",
+        },
+        {
+          img: "14.jpg",
+          text: "25/12/2025",
+          detail:
+            "Anh đã rất lo lắng khum biết liệu em có thích món quà này khum, nhưng em up fb là anh không giấu nổi niềm vui rồi",
+        },
+      ];
+
+      const introText =
+        "Eim iu dấu à... <br><br> Giờ đã là tháng 1 năm 2026. <br> Một hành trình nữa lại sắp bắt đầu. <br><br> Hôm nay, anh đã nhìn lại những điều mà chúng mình đã trải qua. Anh lại nhớ em, nên anh làm cái này để mình nhớ và trân trọng những tháng ngày đã qua. Có lẽ phần lớn chỉ là những dòng tin nhắn, nhưng anh đã yêu em từ những dòng tin nhắn này đấy.";
+
+      // --- LOGIC ---
+      const screens = {
+        intro: document.getElementById("screen-intro"),
+        typewriter: document.getElementById("screen-typewriter"),
+        gallery: document.getElementById("screen-gallery"),
+        letter: document.getElementById("screen-letter"),
+        reveal: document.getElementById("screen-reveal"),
+      };
+      const bgMusic = document.getElementById("bgMusic");
+
+      // Music Helper
+      const playMusic = () => {
+        bgMusic.volume = 0.5;
+        bgMusic
+          .play()
+          .catch((e) => console.log("Audio play failed interaction required"));
+      };
+
+      function switchScreen(from, to) {
+        from.classList.remove("active");
+        from.classList.add("exit");
+        setTimeout(() => {
+          to.classList.add("active");
+          if (to === screens.typewriter) startIntroTypewriter();
+          if (to === screens.gallery) initCards();
+          if (to === screens.reveal) startFinalSequence();
+        }, 1000);
+      }
+
+      // 1. INTRO
+      const fingerBtn = document.getElementById("fingerprintBtn");
+      let pressTimer;
+
+      const startScan = (e) => {
+        if (e.cancelable) e.preventDefault(); // Prevent touch scroll
+        fingerBtn.classList.add("scanning");
+        playMusic(); // Trigger music on first interaction
+        if (navigator.vibrate) navigator.vibrate(20);
+
+        pressTimer = setTimeout(() => {
+          if (navigator.vibrate) navigator.vibrate([40, 40]);
+          switchScreen(screens.intro, screens.typewriter);
+        }, 800);
+      };
+
+      const endScan = () => {
+        fingerBtn.classList.remove("scanning");
+        clearTimeout(pressTimer);
+      };
+
+      fingerBtn.addEventListener("mousedown", startScan);
+      fingerBtn.addEventListener("touchstart", startScan, { passive: false });
+      ["mouseup", "touchend", "mouseleave"].forEach((evt) =>
+        fingerBtn.addEventListener(evt, endScan)
+      );
+
+      // 2. TYPEWRITER
+      function startIntroTypewriter() {
+        const container = document.getElementById("typewriter-content");
+        const btn = document.getElementById("nextBtnTypewriter");
+        container.innerHTML = "";
+        const words = introText.split(" ");
+        let i = 0;
+        container.classList.add("cursor-blink");
+
+        function type() {
+          if (i < words.length) {
+            container.innerHTML += words[i] + " ";
+            i++;
+            setTimeout(type, 100);
+          } else {
+            container.classList.remove("cursor-blink");
+            btn.style.opacity = 1;
+          }
+        }
+        type();
+        btn.addEventListener("click", () =>
+          switchScreen(screens.typewriter, screens.gallery)
+        );
+      }
+
+      // 3. GALLERY (SHUTTERSTOCK STACK STYLE)
+      const stack = document.getElementById("card-stack");
+      const detailView = document.getElementById("detail-view");
+      const detailText = document.getElementById("detail-text");
+
+      // Generate random rotations for the stack effect
+      const randomRotations = memories.map(() => (Math.random() - 0.5) * 8);
+
+      function initCards() {
+        stack.innerHTML = "";
+        // We want the first memory (index 0) to be at the bottom of the stack visually?
+        // Actually, gallery usually goes 1 -> 2 -> 3. So Memory 1 is top card.
+        // We need to render in reverse order so 1 is on top in DOM (z-index handled manually).
+
+        const cardData = [...memories];
+
+        // Render from last to first so first is on top of DOM stack
+        // Actually, for `absolute` positioning, last in DOM is on top.
+        // So we render reverse of reverse -> Render normal order, but manipulate z-index.
+
+        // Let's render correct order, but use z-index to stack 0 on top.
+        // And we only attach listeners to the top card.
+
+        cardData.reverse().forEach((mem, i) => {
+          // i=0 is the last memory (bottom), i=length-1 is first memory (top)
+          createCardElement(mem, i, cardData.length);
+        });
+      }
+
+      function createCardElement(mem, index, total) {
+        // index runs 0 to total-1.
+        // We want realIndex (from start of array) to calc rotation
+        const realIndex = total - 1 - index;
+
+        const card = document.createElement("div");
+        card.className = "swipe-card";
+
+        // STACK VISUALS (The "Shutterstock" pile look)
+        // Top card (last in DOM) gets scale 1, others slightly smaller and rotated
+        const isTop = index === total - 1;
+
+        // Store initial transform for reset
+        const rotation = isTop ? 0 : randomRotations[realIndex];
+        const scale = isTop ? 1 : 0.95 - (total - index) * 0.01; // subtle scaling
+        const translateY = isTop ? 0 : (total - index) * 2; // subtle shift down
+
+        card.style.zIndex = index;
+        card.dataset.baseTransform = `translateY(${translateY}px) scale(${scale}) rotate(${rotation}deg)`;
+        card.style.transform = card.dataset.baseTransform;
+
+        // Opacity for depth
+        if (total - index > 3) {
+          card.style.opacity = 0; // Hide cards too deep in stack
+        } else {
+          card.style.opacity = 1;
+        }
+
+        card.innerHTML = `
+            <img src="${mem.img}" class="card-img" draggable="false">
+            <div class="date-badge">${mem.text}</div>
+            <div class="card-hint">
+                <div class="hint-pill">
+                    <i class="ph-fill ph-hand-tap"></i> Chạm xem &bull; Vuốt bỏ
+                </div>
+            </div>
+        `;
+
+        stack.appendChild(card);
+
+        if (isTop) {
+          setupInteraction(card, mem);
+        }
+      }
+
+      function setupInteraction(card, memData) {
+        let startX = 0,
+          currentX = 0,
+          startY = 0;
+        let isDragging = false;
+        let startTime = 0;
+
+        const onStart = (e) => {
+          isDragging = true;
+          startTime = new Date().getTime();
+          const clientX = e.type.includes("touch")
+            ? e.touches[0].clientX
+            : e.clientX;
+          const clientY = e.type.includes("touch")
+            ? e.touches[0].clientY
+            : e.clientY;
+          startX = clientX;
+          startY = clientY;
+          card.style.transition = "none"; // Remove transition for drag
+        };
+
+        const onMove = (e) => {
+          if (!isDragging) return;
+          const clientX = e.type.includes("touch")
+            ? e.touches[0].clientX
+            : e.clientX;
+          const clientY = e.type.includes("touch")
+            ? e.touches[0].clientY
+            : e.clientY;
+
+          currentX = clientX - startX;
+          const currentY = clientY - startY;
+
+          // Move and Rotate based on drag
+          const rotate = currentX * 0.05;
+          card.style.transform = `translateX(${currentX}px) translateY(${currentY}px) rotate(${rotate}deg)`;
+        };
+
+        const onEnd = (e) => {
+          if (!isDragging) return;
+          isDragging = false;
+          card.style.transition =
+            "transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)"; // Restore smooth transition
+
+          const timeDiff = new Date().getTime() - startTime;
+          const moveDist = Math.abs(currentX);
+
+          // TAP DETECTION (Short time, short distance)
+          if (timeDiff < 300 && moveDist < 10) {
+            card.style.transform = card.dataset.baseTransform; // Reset
+            openDetail(memData);
+            return;
+          }
+
+          // SWIPE DETECTION
+          if (moveDist > 100) {
+            // Swipe out
+            const dir = currentX > 0 ? 1 : -1;
+            card.style.transform = `translateX(${dir * 1000}px) rotate(${
+              dir * 45
+            }deg)`;
+            setTimeout(() => {
+              card.remove();
+              updateStackInteractivity(); // Promote next card
+              if (stack.children.length === 0) {
+                setTimeout(
+                  () => switchScreen(screens.gallery, screens.letter),
+                  500
+                );
+              }
+            }, 300);
+          } else {
+            // Reset to original pile position
+            card.style.transform = card.dataset.baseTransform;
+          }
+        };
+
+        // Events
+        card.addEventListener("mousedown", onStart);
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onEnd);
+
+        card.addEventListener("touchstart", onStart, { passive: true });
+        window.addEventListener("touchmove", onMove, { passive: true }); // Optimized touch
+        window.addEventListener("touchend", onEnd);
+      }
+
+      function updateStackInteractivity() {
+        const cards = Array.from(stack.children);
+        if (cards.length === 0) return;
+
+        // The new top card is the last one in DOM
+        const topCard = cards[cards.length - 1];
+        const memData = memories[memories.length - cards.length]; // Find matching data
+
+        // Animate it to "Active" state (scale 1, rotate 0)
+        topCard.style.transition = "all 0.5s ease";
+        topCard.style.transform = `scale(1) rotate(0deg)`;
+        topCard.dataset.baseTransform = `scale(1) rotate(0deg)`; // Update base for reset
+        topCard.style.opacity = 1;
+
+        // Show Hint
+        const hint = topCard.querySelector(".card-hint");
+        if (hint) hint.style.opacity = 1;
+
+        // Attach listeners
+        setupInteraction(topCard, memData);
+
+        // Bring the card below it up slightly
+        if (cards.length > 1) {
+          const nextCard = cards[cards.length - 2];
+          nextCard.style.opacity = 1;
+        }
+      }
+
+      function openDetail(mem) {
+        detailText.innerText = mem.detail;
+        detailView.classList.add("active");
+      }
+      document
+        .getElementById("close-detail-btn")
+        .addEventListener("click", () => {
+          detailView.classList.remove("active");
+        });
+
+      // 4. PETALS
+      function createPetals() {
+        const container = document.getElementById("petal-container");
+        for (let i = 0; i < 30; i++) {
+          const petal = document.createElement("div");
+          petal.classList.add("petal");
+          petal.style.backgroundColor =
+            Math.random() > 0.5 ? "var(--red-deep)" : "var(--gold-light)";
+          const size = Math.random() * 8 + 4;
+          petal.style.width = size + "px";
+          petal.style.height = size + "px";
+          petal.style.left = Math.random() * 100 + "%";
+          petal.style.animationDuration = Math.random() * 10 + 10 + "s";
+          petal.style.animationDelay = -Math.random() * 20 + "s";
+          container.appendChild(petal);
+        }
+      }
+      createPetals();
+
+      // 5. FINAL REVEAL
+      document.getElementById("openGiftBtn").addEventListener("click", () => {
+        switchScreen(screens.letter, screens.reveal);
+      });
+
+      async function startFinalSequence() {
+        const container = document.getElementById("final-text-container");
+        container.innerHTML = "";
+
+        const cursor = document.createElement("span");
+        cursor.className =
+          "cursor-blink inline-block h-6 w-1 bg-gold ml-1 align-middle";
+
+        const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+        const typeLine = async (text, cssClass) => {
+          const p = document.createElement("div");
+          p.className =
+            cssClass || "text-xl text-gray-300 font-light italic mb-4";
+          container.appendChild(p);
+          p.appendChild(cursor);
+
+          for (let char of text) {
+            p.innerHTML = p.innerText + char;
+            p.appendChild(cursor);
+            await sleep(50);
+          }
+          await sleep(500);
+        };
+
+        await typeLine(
+          "Vậy mà em cũng chịu xem đến hết rồi.",
+          "text-lg text-gray-400 italic mb-6"
+        );
+        await typeLine(
+          "Em từng nói, trăm tin nhắn không bằng một lần gặp mặt...",
+          "text-xl text-white mb-10"
+        );
+
+        const h1 = document.createElement("h1");
+        h1.className = "font-title text-4xl text-gold mt-8";
+        container.appendChild(h1);
+        h1.appendChild(cursor);
+
+        const msg = "RA MỞ CỬA ĐI";
+        for (let char of msg) {
+          h1.innerHTML = h1.innerText + char;
+          h1.appendChild(cursor);
+          await sleep(150);
+        }
+      }
+    </script>
+  </body>
+</html>
