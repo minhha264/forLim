@@ -227,21 +227,20 @@
       .swipe-card:last-child .card-hint {
         opacity: 1;
       }
-
+      
       /* NEW: Breathing & Glowing Animation */
       @keyframes breathGlow {
-        0%,
-        100% {
+        0%, 100% {
           transform: scale(1);
           box-shadow: 0 0 5px rgba(212, 175, 55, 0.2);
           border-color: rgba(212, 175, 55, 0.3);
-          background: rgba(0, 0, 0, 0.6);
+          background: rgba(0,0,0,0.6);
         }
         50% {
           transform: scale(1.05);
           box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
           border-color: rgba(212, 175, 55, 0.8);
-          background: rgba(0, 0, 0, 0.8);
+          background: rgba(0,0,0,0.8);
           color: #fff;
           text-shadow: 0 0 8px #d4af37;
         }
@@ -295,7 +294,7 @@
         height: 60vh;
         width: 100%;
       }
-
+      
       .letter-scroll {
         height: 100%;
         overflow-y: auto;
@@ -307,11 +306,7 @@
         scrollbar-width: thin;
         scrollbar-color: var(--gold-primary) #333;
         mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
-        -webkit-mask-image: linear-gradient(
-          to bottom,
-          black 90%,
-          transparent 100%
-        );
+        -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
       }
       .letter-scroll::-webkit-scrollbar {
         width: 4px;
@@ -370,7 +365,8 @@
   </head>
   <body>
     <!-- BACKGROUND MUSIC -->
-    <audio id="bgMusic" loop>
+    <!-- Added preload="auto" to force buffering immediately -->
+    <audio id="bgMusic" loop preload="auto">
       <source src="anhnhora.mp3" type="audio/mp3" />
     </audio>
 
@@ -440,13 +436,14 @@
         <!-- Cards injected via JS -->
       </div>
 
-      <!-- Navigation Icons -->
+      <!-- Navigation Icons (UPDATED) -->
       <div
-        class="absolute bottom-12 flex gap-12 text-gray-600 text-3xl z-20 pointer-events-none"
+        class="absolute bottom-12 flex flex-col items-center gap-3 z-20 pointer-events-none"
       >
-        <i class="ph ph-arrow-left opacity-30"></i>
-        <i class="ph ph-hand-swipe text-gold animate-bounce opacity-80"></i>
-        <i class="ph ph-arrow-right opacity-30"></i>
+        <i class="ph ph-hand-swipe text-gold text-3xl animate-bounce opacity-80"></i>
+        <span class="font-title text-xs md:text-sm text-gray-500 tracking-[0.2em] uppercase opacity-60">
+            Vuốt trái để xem thêm
+        </span>
       </div>
     </div>
 
@@ -455,8 +452,8 @@
       <div
         class="w-full max-w-md bg-[#111] border border-yellow-900/50 p-8 rounded-sm shadow-2xl transform transition-all"
       >
-        <div
-          id="detail-date"
+        <div 
+          id="detail-date" 
           class="text-center text-gold font-title text-xl tracking-[0.2em] mb-6 border-b border-yellow-900/30 pb-2 inline-block w-full"
         >
           <!-- JS fills date here -->
@@ -490,78 +487,74 @@
 
         <!-- Wrapper for scroll logic -->
         <div class="letter-container">
-          <div
+            <div
             id="letter-scroll-area"
             class="letter-scroll text-lg md:text-xl text-gray-300 leading-relaxed font-light italic text-justify space-y-4"
-          >
+            >
             <p>
-              Mấy ngày này, anh đã suy nghĩ rất nhiều về mối quan hệ của chúng
-              mình. Nhìn lại từng khoảnh khắc đã qua, và ôm lấy nó.
+                Mấy ngày này, anh đã suy nghĩ rất nhiều về mối quan hệ của chúng
+                mình. Nhìn lại từng khoảnh khắc đã qua, và ôm lấy nó.
             </p>
             <p>
-              Suốt một khoảng thời gian, chúng mình cứ hợp rồi lại tan. Có lẽ
-              chúng mình đều có những khoảnh khắc lo lắng rằng những tổn thương
-              cũ, sai lầm cũ sẽ lại trở thành bài học lặp lại.
+                Suốt một khoảng thời gian, chúng mình cứ hợp rồi lại tan. Có lẽ
+                chúng mình đều có những khoảnh khắc lo lắng rằng những tổn thương
+                cũ, sai lầm cũ sẽ lại trở thành bài học lặp lại.
             </p>
             <p>
-              Nhưng anh cho rằng mỗi lần chúng mình đau, chúng mình lại có không
-              gian để trở về với chính mình, để thấy bản thân mình rõ hơn, và
-              người kia rõ hơn. Rồi cuối cùng vẫn chọn ôm lấy bóng dáng của
-              nhau. Mỗi lần như vậy lại là một lần tu sửa, nối rộng trái tim của
-              mình vì tình yêu.
+                Nhưng anh cho rằng mỗi lần chúng mình đau, chúng mình lại có không
+                gian để trở về với chính mình, để thấy bản thân mình rõ hơn, và
+                người kia rõ hơn. Rồi cuối cùng vẫn chọn ôm lấy bóng dáng của nhau.
+                Mỗi lần như vậy lại là một lần tu sửa, nối rộng trái tim của mình vì
+                tình yêu.
             </p>
             <p>
-              Anh tin rằng sự chân thành của chúng mình lớn hơn sự mâu thuẫn, vì
-              những ký ức đẹp về em đã giúp anh thắng được những cơn bực tức
-              nhất thời, những sự khác biệt giữa chúng mình.
+                Anh tin rằng sự chân thành của chúng mình lớn hơn sự mâu thuẫn, vì
+                những ký ức đẹp về em đã giúp anh thắng được những cơn bực tức nhất
+                thời, những sự khác biệt giữa chúng mình.
             </p>
             <p>
-              Dù rằng, chúng mình đã có nhiều lúc không vui, làm nhau buồn, làm
-              nhau tổn thương, nhưng ánh sáng từ em vẫn đủ để anh băng qua những
-              chuyện không vui, tiến về trái tim em một lần nữa.
+                Dù rằng, chúng mình đã có nhiều lúc không vui, làm nhau buồn, làm
+                nhau tổn thương, nhưng ánh sáng từ em vẫn đủ để anh băng qua những
+                chuyện không vui, tiến về trái tim em một lần nữa.
             </p>
             <p>
-              Quá trình "lửa thử vàng" này làm cho anh càng cảm thấy mối quan hệ
-              này càng đáng tin hơn là những mối quan hệ thuận buồm xuôi gió
-              ngay từ đầu.
+                Quá trình "lửa thử vàng" này làm cho anh càng cảm thấy mối quan hệ
+                này càng đáng tin hơn là những mối quan hệ thuận buồm xuôi gió ngay
+                từ đầu.
             </p>
             <p>
-              Anh sẽ mãi nhớ rằng, hôm đó em nói với anh rằng đáng ra anh phải
-              thấy vui, thấy may mắn vì em đã thấy biển cả nhưng vẫn chọn ở lại
-              với dòng sông. Anh cứ nghĩ mãi nghĩ mãi, mới nhận ra rằng em đã
-              bao dung với anh biết nhường nào. Thế là lúc nhận ra, anh đã khóc
-              đấy.
+                Anh sẽ mãi nhớ rằng, hôm đó em nói với anh rằng đáng ra anh phải
+                thấy vui, thấy may mắn vì em đã thấy biển cả nhưng vẫn chọn ở lại
+                với dòng sông. Anh cứ nghĩ mãi nghĩ mãi, mới nhận ra rằng em đã bao
+                dung với anh biết nhường nào. Thế là lúc nhận ra, anh đã khóc đấy.
             </p>
             <p>
-              Đứa trẻ bên trong mà anh đã bỏ rơi từ lâu nay vì vài câu nói của
-              em mà cảm thấy như được vỗ về. Vì lần đầu tiên nó gặp được một
-              người như em. Được có em ở bên là điều mà anh tự hào nhất trong cả
-              cuộc đời này cho đến hiện tại, và anh mong muốn nó vẫn đúng với cả
-              sau này nữa.
+                Đứa trẻ bên trong mà anh đã bỏ rơi từ lâu nay vì vài câu nói của em
+                mà cảm thấy như được vỗ về. Vì lần đầu tiên nó gặp được một người
+                như em. Được có em ở bên là điều mà anh tự hào nhất trong cả cuộc
+                đời này cho đến hiện tại, và anh mong muốn nó vẫn đúng với cả sau
+                này nữa.
             </p>
             <p>
-              Cảm ơn em rất nhiều vì tất cả, cảm ơn cả những lần rời xa để cả
-              anh và em được nhìn nhận lại tình cảm một cách rõ hơn, chân thật
-              hơn. Và cuối cùng, cảm ơn em vì đã ở lại đây với anh.
+                Cảm ơn em rất nhiều vì tất cả, cảm ơn cả những lần rời xa để cả anh
+                và em được nhìn nhận lại tình cảm một cách rõ hơn, chân thật hơn. Và
+                cuối cùng, cảm ơn em vì đã ở lại đây với anh.
             </p>
             <p>
-              Sự thấu hiểu sinh ra từ đau đớn này là những thứ mà một mối quan
-              hệ không gặp gió bão sẽ không bao giờ có được. Giống như một cái
-              cây, sau mỗi lần mưa gió, rễ sẽ sâu hơn, thân sẽ cứng hơn.
+                Sự thấu hiểu sinh ra từ đau đớn này là những thứ mà một mối quan hệ
+                không gặp gió bão sẽ không bao giờ có được. Giống như một cái cây,
+                sau mỗi lần mưa gió, rễ sẽ sâu hơn, thân sẽ cứng hơn.
             </p>
             <p>
-              Anh cũng đã từng giằng co trong tâm trí mình, nhưng cuối cùng vẫn
-              xác định em chính là người mà anh không muốn bỏ lỡ, không phải ai
-              khác, mà chỉ là em thôi.
+                Anh cũng đã từng giằng co trong tâm trí mình, nhưng cuối cùng vẫn
+                xác định em chính là người mà anh không muốn bỏ lỡ, không phải ai
+                khác, mà chỉ là em thôi.
             </p>
             <!-- Padding bottom to ensure text isn't hidden behind button -->
             <div class="h-8"></div>
-          </div>
-          <!-- Scroll Indicator -->
-          <i
-            id="scroll-arrow"
-            class="ph-fill ph-caret-down scroll-indicator"
-          ></i>
+            </div>
+            <!-- Scroll Indicator -->
+            <i id="scroll-arrow" class="ph-fill ph-caret-down scroll-indicator"></i>
         </div>
 
         <div class="text-center flex-shrink-0 pt-4">
@@ -680,13 +673,38 @@
       };
       const bgMusic = document.getElementById("bgMusic");
 
-      // Music Helper
+      // --- IMPROVED MUSIC HANDLING ---
+      // Force load immediately
+      window.addEventListener('load', () => {
+        bgMusic.load();
+      });
+
       const playMusic = () => {
         bgMusic.volume = 0.5;
-        bgMusic
-          .play()
-          .catch((e) => console.log("Audio play failed interaction required"));
+        // Check if already playing
+        if (!bgMusic.paused) return;
+
+        bgMusic.play().then(() => {
+          // Success
+          console.log("Audio playing");
+        }).catch((e) => {
+          // Failed (likely policy), wait for next interaction
+          console.log("Audio play deferred due to browser policy");
+        });
       };
+
+      // Global one-time listener: The FIRST touch anywhere on the screen starts music
+      // This is the fastest way to get music playing in modern browsers
+      const startMusicGlobally = () => {
+        playMusic();
+        // Remove listeners after first attempt to avoid spamming
+        document.removeEventListener('click', startMusicGlobally);
+        document.removeEventListener('touchstart', startMusicGlobally);
+      };
+
+      document.addEventListener('click', startMusicGlobally, { once: true });
+      document.addEventListener('touchstart', startMusicGlobally, { once: true, passive: true });
+
 
       function switchScreen(from, to) {
         from.classList.remove("active");
@@ -707,7 +725,10 @@
       const startScan = (e) => {
         if (e.cancelable) e.preventDefault(); // Prevent touch scroll
         fingerBtn.classList.add("scanning");
-        playMusic(); // Trigger music on first interaction
+        
+        // Ensure music plays if the global trigger missed it
+        playMusic(); 
+        
         if (navigator.vibrate) navigator.vibrate(20);
 
         pressTimer = setTimeout(() => {
@@ -930,7 +951,7 @@
           const isAtBottom =
             scrollArea.scrollTop + scrollArea.clientHeight >=
             scrollArea.scrollHeight - 10;
-
+          
           if (isAtBottom) {
             indicator.classList.remove("visible");
           } else {
@@ -940,7 +961,7 @@
 
         // Attach event
         scrollArea.addEventListener("scroll", checkScroll);
-
+        
         // Initial check after a slight delay to allow rendering
         setTimeout(checkScroll, 500);
       }
@@ -1004,13 +1025,11 @@
         );
 
         const h1 = document.createElement("h1");
-        h1.className =
-          "font-title text-3xl md:text-4xl text-gold mt-8 leading-normal"; // Adjusted size
+        h1.className = "font-title text-3xl md:text-4xl text-gold mt-8 leading-normal"; // Adjusted size
         container.appendChild(h1);
         h1.appendChild(cursor);
 
-        const msg =
-          "Vậy nên em hãy thử ra mở cửa xem điều gì đang chờ em ngoài kia"; // Updated text
+        const msg = "Vậy nên em hãy thử ra mở cửa xem có gì đang chờ em ngoài kia"; // Updated text
         for (let char of msg) {
           h1.innerHTML = h1.innerText + char;
           h1.appendChild(cursor);
@@ -1020,3 +1039,5 @@
     </script>
   </body>
 </html>
+
+
